@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>たんたん探しミッション</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+  :root {
+    --tan:#D4821A; --tan-l:#F5C060; --tan-d:#8B4F00;
+    --bg:#FFF8EE; --card:#FFFFFF; --text:#2C1A00;
+    --muted:#8a7560; --border:#E8D5B0;
+    --green:#2E8B4A; --green-l:#E8F5EC;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;}
+  header{width:100%;background:var(--tan);padding:12px 20px;display:flex;align-items:center;gap:10px;}
+  header h1{color:#fff;font-size:16px;font-weight:700;letter-spacing:.05em;}
+  .prog-wrap{width:100%;background:var(--tan-d);height:6px;}
+  .prog-bar{height:6px;background:var(--tan-l);transition:width .6s ease;}
+  .main{width:100%;max-width:420px;padding:24px 16px;display:flex;flex-direction:column;align-items:center;gap:20px;}
+
+  /* spot card */
+  .spot-card{width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:28px 24px;display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;}
+  .spot-badge{background:var(--tan);color:#fff;font-size:12px;font-weight:700;padding:4px 16px;border-radius:20px;letter-spacing:.1em;}
+  .char-wrap{position:relative;width:140px;height:140px;display:flex;align-items:center;justify-content:center;}
+  .char-wrap img{width:120px;height:120px;object-fit:contain;animation:bounce 1.2s ease-in-out infinite;}
+  @keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+  .sp{position:absolute;width:8px;height:8px;border-radius:50%;background:var(--tan-l);animation:spk 1.5s ease-in-out infinite;}
+  .sp1{top:10px;right:20px;animation-delay:0s;}
+  .sp2{top:30px;left:10px;animation-delay:.4s;width:6px;height:6px;}
+  .sp3{bottom:20px;right:10px;animation-delay:.8s;width:5px;height:5px;}
+  @keyframes spk{0%,100%{opacity:.2;transform:scale(.8);}50%{opacity:1;transform:scale(1.3);}}
+  .spot-title{font-size:22px;font-weight:700;color:var(--tan-d);}
+  .spot-sub{font-size:14px;color:var(--muted);line-height:1.6;}
+  .found-stamp{background:var(--green-l);border:2px solid var(--green);border-radius:12px;padding:14px 24px;width:100%;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--green);font-weight:700;font-size:16px;}
+  .check-ic{width:24px;height:24px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;}
+  .check-ic svg{width:14px;height:14px;}
+  .already-badge{background:#FFF3E0;border:1.5px solid var(--tan-l);border-radius:12px;padding:12px 20px;width:100%;text-align:center;font-size:13px;color:var(--tan-d);}
+
+  /* progress */
+  .prog-section{width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:18px 20px;}
+  .prog-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .prog-label{font-size:13px;font-weight:700;}
+  .prog-count{font-size:20px;font-weight:700;color:var(--tan);}
+  .prog-count span{font-size:13px;color:var(--muted);font-weight:400;}
+  .dots-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;}
+  .dot{aspect-ratio:1;border-radius:50%;background:#E8D5B0;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;transition:all .3s;}
+  .dot.found{background:var(--tan);border-color:var(--tan-d);color:#fff;}
+  .dot.current{background:var(--tan-l);border-color:var(--tan);transform:scale(1.15);}
+
+  /* hint */
+  .hint-box{width:100%;background:#FFF3E0;border:1.5px solid var(--tan-l);border-radius:12px;padding:14px 16px;}
+  .hint-label{font-size:11px;font-weight:700;color:var(--tan);letter-spacing:.1em;margin-bottom:6px;}
+  .hint-text{font-size:13px;color:var(--text);line-height:1.6;}
+
+  /* complete */
+  .complete{display:none;width:100%;max-width:420px;flex-direction:column;align-items:center;gap:20px;padding:24px 16px;}
+  .complete-card{width:100%;background:#FFF8EE;border:2px solid var(--tan);border-radius:24px;padding:32px 24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;}
+  .complete-title{font-size:26px;font-weight:700;color:var(--tan-d);line-height:1.4;}
+  .complete-sub{font-size:14px;color:var(--muted);line-height:1.7;}
+  .complete-char{width:150px;height:150px;object-fit:contain;animation:celeb .6s ease-in-out infinite alternate;}
+  @keyframes celeb{from{transform:translateY(0) rotate(-3deg);}to{transform:translateY(-12px) rotate(3deg);}}
+  .reward-badge{background:var(--tan);color:#fff;font-size:15px;font-weight:700;padding:10px 28px;border-radius:30px;letter-spacing:.1em;}
+
+  /* top page */
+  .top-page{display:none;width:100%;max-width:420px;padding:24px 16px;flex-direction:column;align-items:center;gap:20px;}
+  .top-card{width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:28px 24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;}
+  .top-title{font-size:24px;font-weight:700;color:var(--tan-d);line-height:1.4;}
+  .top-sub{font-size:14px;color:var(--muted);line-height:1.7;}
+  .top-char{width:140px;height:140px;object-fit:contain;animation:bounce 1.2s ease-in-out infinite;}
+  .start-note{width:100%;background:#FFF3E0;border:1.5px solid var(--tan-l);border-radius:12px;padding:16px;font-size:13px;color:var(--tan-d);line-height:1.7;text-align:left;}
+  .start-note strong{font-weight:700;}
+</style>
+</head>
+<body>
+
+<header>
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" fill="white" opacity="0.3"/><text x="10" y="14" text-anchor="middle" fill="white" font-size="12">🦝</text></svg>
+  <h1 id="headerTitle">たんたん探しミッション</h1>
+</header>
+<div class="prog-wrap"><div class="prog-bar" id="topBar" style="width:0%"></div></div>
+
+<!-- トップページ -->
+<div class="top-page" id="topPage">
+  <div class="top-card">
+    <div class="spot-badge">スタート</div>
+    <div class="char-wrap">
+      <div class="sp sp1"></div><div class="sp sp2"></div><div class="sp sp3"></div>
+      <img class="top-char" src="https://i.imgur.com/placeholder.png" id="topChar" alt="タンタン" onerror="this.style.display='none'" />
+    </div>
+    <div class="top-title">たんたんを<br>探せ！</div>
+    <div class="top-sub">モデルハウスの中に<br>たんたんのアクリルスタンドが<br><strong style="color:var(--tan-d)">10か所</strong>隠れています。<br>QRコードを読んで全部見つけよう！</div>
+  </div>
+  <div class="start-note">
+    <strong>あそびかた</strong><br>
+    ① たんたんのアクリルスタンドを見つける<br>
+    ② そばにあるQRコードをスキャン<br>
+    ③ 10か所全部集めるとミッション完了！<br>
+    ④ スタッフに画面を見せてプレゼントをもらおう
+  </div>
+</div>
+
+<!-- スポットページ -->
+<div class="main" id="mainPage">
+  <div class="spot-card">
+    <div class="spot-badge" id="spotBadge">SPOT 1 / 10</div>
+    <div class="char-wrap">
+      <div class="sp sp1"></div><div class="sp sp2"></div><div class="sp sp3"></div>
+      <img id="charImg" src="https://i.imgur.com/placeholder.png" alt="タンタン" onerror="this.style.display='none'" />
+    </div>
+    <div class="spot-title" id="spotTitle">玄関で発見！</div>
+    <div class="spot-sub" id="spotSub">タンタンが玄関に隠れていたよ！</div>
+    <div id="foundStamp" class="found-stamp">
+      <div class="check-ic"><svg viewBox="0 0 14 14" fill="none"><polyline points="2,7 5.5,11 12,3" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      発見！ +1ポイント
+    </div>
+    <div id="alreadyBadge" class="already-badge" style="display:none">このスポットはすでに発見済みです</div>
+  </div>
+
+  <div class="prog-section">
+    <div class="prog-header">
+      <div class="prog-label">発見スポット</div>
+      <div class="prog-count" id="countDisp">0<span> / 10</span></div>
+    </div>
+    <div class="dots-grid" id="dotsGrid"></div>
+  </div>
+
+</div>
+
+<!-- コンプリート -->
+<div class="complete" id="completePage">
+  <div class="complete-card">
+    <div class="reward-badge">ミッション完了！</div>
+    <img class="complete-char" src="https://i.imgur.com/placeholder.png" id="completeChar" alt="タンタン" onerror="this.style.display='none'" />
+    <div class="complete-title">全10か所<br>発見おめでとう！</div>
+    <div class="complete-sub">たんたんと一緒にモデルハウスを<br>全部まわってくれてありがとう！<br><br>スタッフにこの画面を見せると<br>プレゼントをお渡しします</div>
+  </div>
+</div>
+
+<script>
+const CHAR_IMG = 'tantan.png';
+
+const STORAGE_KEY = 'tantan_found_spots';
+
+function getFound() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch(e) { return []; }
+}
+
+function saveFound(arr) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+}
+
+function renderDots(found) {
+  const grid = document.getElementById('dotsGrid');
+  grid.innerHTML = '';
+  for (let i = 0; i < 10; i++) {
+    const d = document.createElement('div');
+    const isFound = found.includes(i+1);
+    d.className = 'dot' + (isFound ? ' found' : '');
+    d.textContent = isFound ? '★' : '';
+    grid.appendChild(d);
+  }
+}
+
+function setCharImg() {
+  document.getElementById('charImg').src = CHAR_IMG;
+  document.getElementById('completeChar').src = CHAR_IMG;
+  document.getElementById('topChar').src = CHAR_IMG;
+}
+
+function init() {
+  setCharImg();
+
+  const params = new URLSearchParams(window.location.search);
+  const spotParam = params.get('spot');
+  const spotNum = parseInt(spotParam);
+
+  const found = getFound();
+  const total = found.length;
+
+  document.getElementById('topBar').style.width = (total / 10 * 100) + '%';
+  document.getElementById('countDisp').innerHTML = total + '<span> / 10</span>';
+  renderDots(found);
+
+  if (!spotParam) {
+    document.getElementById('topPage').style.display = 'flex';
+    document.getElementById('mainPage').style.display = 'none';
+    document.getElementById('headerTitle').textContent = 'たんたん探しミッション';
+    return;
+  }
+
+  document.getElementById('topPage').style.display = 'none';
+
+  if (total >= 10) {
+    document.getElementById('mainPage').style.display = 'none';
+    document.getElementById('completePage').style.display = 'flex';
+    document.getElementById('headerTitle').textContent = 'ミッション完了！';
+    return;
+  }
+
+  if (isNaN(spotNum) || spotNum < 1 || spotNum > 10) {
+    document.getElementById('spotTitle').textContent = 'QRコードが正しくありません';
+    document.getElementById('spotSub').textContent = 'スタッフにお声がけください。';
+    document.getElementById('foundStamp').style.display = 'none';
+    return;
+  }
+
+  const alreadyFound = found.includes(spotNum);
+
+  document.getElementById('spotBadge').textContent = `SPOT ${spotNum}`;
+  document.getElementById('spotTitle').textContent = `No.${spotNum} 発見！`;
+  document.getElementById('spotSub').textContent = `たんたんを見つけてくれてありがとう！\nほかの場所も探してみてね！`;
+
+  if (alreadyFound) {
+    document.getElementById('foundStamp').style.display = 'none';
+    document.getElementById('alreadyBadge').style.display = 'block';
+  } else {
+    const newFound = [...found, spotNum];
+    saveFound(newFound);
+    renderDots(newFound);
+    const newTotal = newFound.length;
+    document.getElementById('topBar').style.width = (newTotal / 10 * 100) + '%';
+    document.getElementById('countDisp').innerHTML = newTotal + '<span> / 10</span>';
+
+    if (newTotal >= 10) {
+      setTimeout(() => {
+        document.getElementById('mainPage').style.display = 'none';
+        document.getElementById('completePage').style.display = 'flex';
+        document.getElementById('headerTitle').textContent = 'ミッション完了！';
+      }, 1400);
+    }
+  }
+}
+
+init();
+</script>
+</body>
+</html>
